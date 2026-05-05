@@ -52,9 +52,8 @@ public class PrestamosFunction {
                         pstmt.setString(5, jsonPost.get("estadoPrestamo").getAsString());
                         pstmt.executeUpdate();
                         
-                        // ---------------------------------------------------------
-                        // INICIO INTEGRACIÓN EVENT GRID (DIAGNÓSTICO V2)
-                        // ---------------------------------------------------------
+
+                        // Integracion event grid
                         context.getLogger().warning(">>> INICIANDO ENVÍO A EVENT GRID V2 <<<");
                         try {
                             String topicEndpoint = "https://topic-biblioteca-eventos.brazilsouth-1.eventgrid.azure.net/api/events"; 
@@ -80,7 +79,7 @@ public class PrestamosFunction {
                                     .POST(HttpRequest.BodyPublishers.ofString(jsonEventGrid))
                                     .build();
 
-                            // CAPTURAMOS LA RESPUESTA REAL DE EVENT GRID
+                            //respuesta del event grid
                             HttpResponse<String> response = client.send(reqEvent, HttpResponse.BodyHandlers.ofString());
                             
                             context.getLogger().warning("=== STATUS EVENT GRID: " + response.statusCode() + " ===");
@@ -89,9 +88,7 @@ public class PrestamosFunction {
                         } catch (Exception e) {
                             context.getLogger().severe("Error CRITICO al enviar evento: " + e.getMessage());
                         }
-                        // ---------------------------------------------------------
-                        // FIN INTEGRACIÓN EVENT GRID
-                        // ---------------------------------------------------------
+                        // fin
                     }
                     return request.createResponseBuilder(HttpStatus.CREATED).body("Préstamo registrado exitosamente").build();
 
