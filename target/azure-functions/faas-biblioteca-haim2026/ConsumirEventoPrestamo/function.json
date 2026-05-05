@@ -1,0 +1,9 @@
+{
+  "scriptFile" : "../faas-biblioteca-1.0-SNAPSHOT.jar",
+  "entryPoint" : "cl.duoc.faas.functions.PrestamoEventConsumer.run",
+  "bindings" : [ {
+    "type" : "eventGridTrigger",
+    "direction" : "in",
+    "name" : "evento"
+  } ]
+}
