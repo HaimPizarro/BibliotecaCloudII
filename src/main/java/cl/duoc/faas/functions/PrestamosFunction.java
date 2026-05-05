@@ -8,6 +8,14 @@ import com.google.gson.JsonObject;
 import java.sql.*;
 import java.util.Optional;
 
+//imports para Event Grid
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.util.UUID;
+
 public class PrestamosFunction {
 
     @FunctionName("PrestamosFunction")
@@ -43,6 +51,47 @@ public class PrestamosFunction {
                         pstmt.setString(4, jsonPost.get("fechaPrestamo").getAsString());
                         pstmt.setString(5, jsonPost.get("estadoPrestamo").getAsString());
                         pstmt.executeUpdate();
+                        
+                        // ---------------------------------------------------------
+                        // INICIO INTEGRACIÓN EVENT GRID (DIAGNÓSTICO V2)
+                        // ---------------------------------------------------------
+                        context.getLogger().warning(">>> INICIANDO ENVÍO A EVENT GRID V2 <<<");
+                        try {
+                            String topicEndpoint = "https://topic-biblioteca-eventos.brazilsouth-1.eventgrid.azure.net/api/events"; 
+                            String topicKey = "9x1vmO3b6pvkJ0IhU5bsm8aikrmMSpu95QkV0gw1o8ulV8ibUGGUJQQJ99CEACZoyfiXJ3w3AAABAZEGg4UV";      
+
+                            String datosPrestamo = "{\"idPrestamo\": " + jsonPost.get("idPrestamo").getAsInt() + 
+                                                   ", \"idUsuario\": \"" + jsonPost.get("idUsuario").getAsString() + "\"}";
+
+                            String jsonEventGrid = "[{" +
+                                    "\"id\": \"" + UUID.randomUUID().toString() + "\"," +
+                                    "\"eventType\": \"Biblioteca.NuevoPrestamo\"," +
+                                    "\"subject\": \"Prestamos/Creacion\"," +
+                                    "\"eventTime\": \"" + Instant.now().toString() + "\"," +
+                                    "\"data\": " + datosPrestamo + "," +
+                                    "\"dataVersion\": \"1.0\"" +
+                                    "}]";
+
+                            HttpClient client = HttpClient.newHttpClient();
+                            HttpRequest reqEvent = HttpRequest.newBuilder()
+                                    .uri(URI.create(topicEndpoint))
+                                    .header("Content-Type", "application/json")
+                                    .header("aeg-sas-key", topicKey)
+                                    .POST(HttpRequest.BodyPublishers.ofString(jsonEventGrid))
+                                    .build();
+
+                            // CAPTURAMOS LA RESPUESTA REAL DE EVENT GRID
+                            HttpResponse<String> response = client.send(reqEvent, HttpResponse.BodyHandlers.ofString());
+                            
+                            context.getLogger().warning("=== STATUS EVENT GRID: " + response.statusCode() + " ===");
+                            context.getLogger().warning("=== RESPUESTA EVENT GRID: " + response.body() + " ===");
+
+                        } catch (Exception e) {
+                            context.getLogger().severe("Error CRITICO al enviar evento: " + e.getMessage());
+                        }
+                        // ---------------------------------------------------------
+                        // FIN INTEGRACIÓN EVENT GRID
+                        // ---------------------------------------------------------
                     }
                     return request.createResponseBuilder(HttpStatus.CREATED).body("Préstamo registrado exitosamente").build();
 
