@@ -1,5 +1,7 @@
 cl\duoc\faas\functions\PrestamosFunction$1.class
+cl\duoc\faas\functions\UsuarioEventConsumer.class
 cl\duoc\faas\functions\UsuariosFunction.class
+cl\duoc\faas\functions\GraphQLFunction.class
 cl\duoc\faas\functions\PrestamoEventConsumer.class
 cl\duoc\faas\functions\UsuariosFunction$1.class
 cl\duoc\faas\functions\PrestamosFunction.class

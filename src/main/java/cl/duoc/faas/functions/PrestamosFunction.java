@@ -59,8 +59,9 @@ public class PrestamosFunction {
                             String topicKey = "9x1vmO3b6pvkJ0IhU5bsm8aikrmMSpu95QkV0gw1o8ulV8ibUGGUJQQJ99CEACZoyfiXJ3w3AAABAZEGg4UV";      
 
                             String datosPrestamo = "{\"idPrestamo\": " + jsonPost.get("idPrestamo").getAsInt() + 
-                                                   ", \"idUsuario\": \"" + jsonPost.get("idUsuario").getAsString() + "\"}";
-
+                                                    ", \"idUsuario\": \"" + jsonPost.get("idUsuario").getAsString() + "\"" +
+                                                    ", \"idLibro\": \"" + jsonPost.get("idLibro").getAsString() + "\"}";
+                                                    
                             String jsonEventGrid = "[{" +
                                     "\"id\": \"" + UUID.randomUUID().toString() + "\"," +
                                     "\"eventType\": \"Biblioteca.NuevoPrestamo\"," +

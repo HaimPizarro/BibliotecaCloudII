@@ -5,8 +5,14 @@ import com.microsoft.azure.functions.annotation.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.sql.*;
+import java.time.Instant;
 import java.util.Optional;
+import java.util.UUID;
 
 public class UsuariosFunction {
 
@@ -98,6 +104,36 @@ public class UsuariosFunction {
                         int filasBorradas = pstmt.executeUpdate();
                         
                         if (filasBorradas > 0) {
+                            try {
+                                String topicEndpoint = "https://topic-biblioteca-eventos.brazilsouth-1.eventgrid.azure.net/api/events"; 
+                                String topicKey = "9x1vmO3b6pvkJ0IhU5bsm8aikrmMSpu95QkV0gw1o8ulV8ibUGGUJQQJ99CEACZoyfiXJ3w3AAABAZEGg4UV";      
+
+                                String datosUsuario = "{\"idUsuario\": \"" + idUsuarioDel + "\"}";
+
+                                String jsonEventGrid = "[{" +
+                                        "\"id\": \"" + UUID.randomUUID().toString() + "\"," +
+                                        "\"eventType\": \"Biblioteca.UsuarioEliminado\"," +
+                                        "\"subject\": \"Usuarios/Eliminacion\"," +
+                                        "\"eventTime\": \"" + Instant.now().toString() + "\"," +
+                                        "\"data\": " + datosUsuario + "," +
+                                        "\"dataVersion\": \"1.0\"" +
+                                        "}]";
+
+                                HttpClient client = HttpClient.newHttpClient();
+                                HttpRequest reqEvent = HttpRequest.newBuilder()
+                                        .uri(URI.create(topicEndpoint))
+                                        .header("Content-Type", "application/json")
+                                        .header("aeg-sas-key", topicKey)
+                                        .POST(HttpRequest.BodyPublishers.ofString(jsonEventGrid))
+                                        .build();
+
+                                client.send(reqEvent, HttpResponse.BodyHandlers.ofString());
+                                context.getLogger().info("=== EVENTO DE USUARIO ELIMINADO ENVIADO A EVENT GRID ===");
+
+                            } catch (Exception e) {
+                                context.getLogger().warning("Error al enviar evento de usuario: " + e.getMessage());
+                            }
+
                             return request.createResponseBuilder(HttpStatus.OK).body("Usuario eliminado exitosamente").build();
                         } else {
                             return request.createResponseBuilder(HttpStatus.NOT_FOUND).body("Usuario no encontrado").build();
