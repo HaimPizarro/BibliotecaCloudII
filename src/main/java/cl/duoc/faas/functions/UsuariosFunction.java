@@ -52,7 +52,11 @@ public class UsuariosFunction {
                     return request.createResponseBuilder(HttpStatus.CREATED).body("Usuario creado exitosamente").build();
 
                 case GET:
-                    String sqlSelect = "SELECT ID_USUARIO, NOMBRE_COMPLETO, CORREO, TELEFONO FROM USUARIOS";
+                    String sqlSelect = "SELECT U.ID_USUARIO, U.NOMBRE_COMPLETO, U.CORREO, U.TELEFONO, COUNT(P.ID_PRESTAMO) AS TOTAL_PRESTAMOS " +
+                                       "FROM USUARIOS U " +
+                                       "LEFT JOIN PRESTAMOS P ON U.ID_USUARIO = P.ID_USUARIO " +
+                                       "GROUP BY U.ID_USUARIO, U.NOMBRE_COMPLETO, U.CORREO, U.TELEFONO";
+                    
                     java.util.List<JsonObject> listaUsuarios = new java.util.ArrayList<>();
                     
                     try (PreparedStatement pstmt = conn.prepareStatement(sqlSelect);
@@ -64,6 +68,7 @@ public class UsuariosFunction {
                             userJson.addProperty("nombreCompleto", rs.getString("NOMBRE_COMPLETO"));
                             userJson.addProperty("correoElectronico", rs.getString("CORREO"));
                             userJson.addProperty("telefono", rs.getString("TELEFONO"));
+                            userJson.addProperty("librosPrestados", rs.getInt("TOTAL_PRESTAMOS")); 
                             listaUsuarios.add(userJson);
                         }
                     }
